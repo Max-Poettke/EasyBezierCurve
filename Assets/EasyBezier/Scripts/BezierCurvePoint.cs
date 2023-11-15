@@ -116,6 +116,7 @@ public class BezierCurvePoint : MonoBehaviour
             if (hardPoints[i] == null) return;
         }
         if(pointPositions.Count != 0) pointPositions.Clear();
+        allPositions.Clear();
         if (generationType == CurveGeneration.Direct)
         {
             foreach (var p in hardPoints)
@@ -130,37 +131,50 @@ public class BezierCurvePoint : MonoBehaviour
     
     //Everything to do with generating the Curves ----------------------------------------------------------------------
     
-    
     private void GenerateThroughSplines(bool draw)
     {
         //now hardPoints represents points already on the curve. So we need to generate the controlPoints through them
-        for (int i = 0; i < hardPoints.Count; i++)
+        //need to generate the curve for all pairs
+        if (curveEnd == CurveEnd.Looping)
         {
-            var p = hardPoints[i];
-            var cp = p.GetComponent<EditableControlPoint>();
-            if (i == 0)
+            for (int i = 0; i < hardPoints.Count; i++)
             {
-                pointPositions.Add(p.transform.position);
-                pointPositions.Add(cp.GetTangentPoints()[0]);
-            } else if (i == hardPoints.Count - 1)
-            {
-                pointPositions.Add(cp.GetTangentPoints()[1]);
-                pointPositions.Add(p.transform.position);
-            }
-            else
-            {
-                pointPositions.Add(cp.GetTangentPoints()[1]);
-                pointPositions.Add(p.transform.position);
-                pointPositions.Add(cp.GetTangentPoints()[0]);
+                pointPositions.Clear();
+                GameObject p;
+                if (i == hardPoints.Count - 1)
+                {
+                    p = gameObject;
+                }
+                else
+                {
+                    p = hardPoints[i];    
+                }
+                var cp = p.GetComponent<EditableControlPoint>();
+                var thisEditablePoint = GetComponent<EditableControlPoint>();
+                if (i == 0)
+                {
+                    pointPositions.Add(transform.position);
+                    pointPositions.Add(thisEditablePoint.GetTangentPoints()[0]);
+                    pointPositions.Add(cp.GetTangentPoints()[1]);
+                    pointPositions.Add(p.transform.position);
+                } 
+                else
+                {
+                    var prevPoint = hardPoints[i - 1];
+                    var prevP = prevPoint.GetComponent<EditableControlPoint>();
+                    pointPositions.Add(prevPoint.transform.position);
+                    pointPositions.Add(prevP.GetTangentPoints()[0]);
+                    pointPositions.Add(cp.GetTangentPoints()[1]);
+                    pointPositions.Add(p.transform.position);
+                }
+                GenerateThroughControlPoints(draw, pointPositions);
             }
         }
-        GenerateThroughControlPoints(draw, pointPositions);
     }
 
     private void GenerateThroughControlPoints(bool draw, List<Vector3> controlPoints)
     {
         iterations = controlPoints.Count - 1;
-        allPositions.Clear();
         Gizmos.color = Color.white;
         for (int i = 0; i < controlPoints.Count; i++)
         {
@@ -318,7 +332,7 @@ public class CurveEditor : Editor
         EditorGUI.BeginChangeCheck();
         if (p.GetTangentPoints() == null) return;
         Vector3 newPosition = Handles.FreeMoveHandle(p.GetTangentPoints()[0], Quaternion.identity
-            , 0.1f, Vector3.one * 0.01f, Handles.SphereHandleCap);
+            , 0.3f, Vector3.one * 0.01f, Handles.SphereHandleCap);
         if (EditorGUI.EndChangeCheck())
         {
             var difference = newPosition - p.transform.position;
