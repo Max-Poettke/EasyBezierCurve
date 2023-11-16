@@ -134,42 +134,38 @@ public class BezierCurvePoint : MonoBehaviour
         //now hardPoints represents points already on the curve. So we need to generate the controlPoints through them
         //need to generate the curve for all pairs
         if (hardPoints[0].GetComponent<EditableControlPoint>().GetTangentPoints() == null) return;
-        if (curveEnd == CurveEnd.Looping)
+        for (int i = 0; i < hardPoints.Count; i++)
         {
-            for (int i = 0; i < hardPoints.Count; i++)
+            pointPositions.Clear();
+            GameObject p;
+            if (i == hardPoints.Count - 1 && curveEnd == CurveEnd.Looping)
             {
-                pointPositions.Clear();
-                GameObject p;
-                if (i == hardPoints.Count - 1)
-                {
-                    p = gameObject;
-                }
-                else
-                {
-                    p = hardPoints[i];    
-                }
-                var cp = p.GetComponent<EditableControlPoint>();
-                var thisEditablePoint = GetComponent<EditableControlPoint>();
-
-                if (i == 0)
-                {
-                    pointPositions.Add(transform.position);
-                    Debug.Log(i);
-                    pointPositions.Add(thisEditablePoint.GetTangentPoints()[0]);
-                    pointPositions.Add(cp.GetTangentPoints()[1]);
-                    pointPositions.Add(p.transform.position);
-                } 
-                else
-                {
-                    var prevPoint = hardPoints[i - 1];
-                    var prevP = prevPoint.GetComponent<EditableControlPoint>();
-                    pointPositions.Add(prevPoint.transform.position);
-                    pointPositions.Add(prevP.GetTangentPoints()[0]);
-                    pointPositions.Add(cp.GetTangentPoints()[1]);
-                    pointPositions.Add(p.transform.position);
-                }
-                GenerateThroughControlPoints(draw, pointPositions);
+                p = gameObject;
             }
+            else
+            {
+                p = hardPoints[i];    
+            }
+            var cp = p.GetComponent<EditableControlPoint>();
+            var thisEditablePoint = GetComponent<EditableControlPoint>();
+
+            if (i == 0)
+            {
+                pointPositions.Add(transform.position);
+                pointPositions.Add(thisEditablePoint.GetTangentPoints()[0]);
+                pointPositions.Add(cp.GetTangentPoints()[1]);
+                pointPositions.Add(p.transform.position);
+            } 
+            else
+            {
+                var prevPoint = hardPoints[i - 1];
+                var prevP = prevPoint.GetComponent<EditableControlPoint>();
+                pointPositions.Add(prevPoint.transform.position);
+                pointPositions.Add(prevP.GetTangentPoints()[0]);
+                pointPositions.Add(cp.GetTangentPoints()[1]);
+                pointPositions.Add(p.transform.position);
+            }
+            GenerateThroughControlPoints(draw, pointPositions);
         }
     }
 
