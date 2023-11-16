@@ -1,17 +1,26 @@
+using System;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 public class EditableControlPoint : MonoBehaviour
 {
+    [SerializeField]
     private float length;
+    [SerializeField]
     private Vector3 tangentDirection;
+    [SerializeField]
     private Vector3 tangentUp;
+    [SerializeField]
     private List<Vector3> tangentPoints;
-    
-    void OnDrawGizmos()
+
+    private void Awake()
     {
         if (tangentPoints == null) tangentPoints = new List<Vector3>(2);
-        if(tangentPoints.Count != 0)tangentPoints.Clear();
+    }
+
+    void OnDrawGizmos()
+    {
+        if(tangentPoints.Count != 0) tangentPoints.Clear();
         tangentPoints.Add(transform.position + tangentDirection * length);
         tangentPoints.Add(transform.position - tangentDirection * length);
         Gizmos.color = Color.blue;
@@ -22,7 +31,7 @@ public class EditableControlPoint : MonoBehaviour
             Gizmos.DrawLine(transform.position, tangentPoints[1]);
         }
     }
-    
+
     public float GetLength(){return length;}
     public void SetLength(float length){this.length = length;}
     public Vector3 GetTangentDirection(){return tangentDirection;}

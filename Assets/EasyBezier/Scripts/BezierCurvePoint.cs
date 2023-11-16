@@ -7,6 +7,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEditor.U2D.Path.GUIFramework;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using Quaternion = UnityEngine.Quaternion;
 using Vector3 = UnityEngine.Vector3;
 
@@ -15,7 +16,7 @@ public class BezierCurvePoint : MonoBehaviour
     [Header("The curve")]
     public List<GameObject> hardPoints;
 
-    private List<Vector3> pointPositions;
+    private List<Vector3> pointPositions = new List<Vector3>();
     List<List<Vector3>> allPositions = new List<List<Vector3>>();
     private int iterations;
     public int steps = 20;
@@ -42,12 +43,6 @@ public class BezierCurvePoint : MonoBehaviour
         MoveAlong();
     }
 
-    private void Start()
-    {
-        if(generationType == CurveGeneration.Direct) GenerateThroughControlPoints(false, pointPositions);
-        if (generationType == CurveGeneration.Generated) GenerateThroughSplines(false);
-    }
-
     //Gets called when a variable in the editor is changed
     private void OnValidate()
     {
@@ -56,11 +51,6 @@ public class BezierCurvePoint : MonoBehaviour
             if (hardPoints[i].GetComponent<EditableControlPoint>() == null)
             {
                 hardPoints[i].AddComponent<EditableControlPoint>();
-                ResetTangents();
-            }
-
-            if (hardPoints[i].GetComponent<EditableControlPoint>().GetLength() == 0)
-            {
                 ResetTangents();
             }
         }
@@ -105,10 +95,16 @@ public class BezierCurvePoint : MonoBehaviour
             }    
         }
     }
-
+    
+    private bool frameBuffer = false;
     #if UNITY_EDITOR
     void OnDrawGizmos()
     {
+        if (frameBuffer == false)
+        {
+            frameBuffer = true;
+            return;
+        }
         Gizmos.color = Color.blue;
         Gizmos.DrawWireSphere(transform.position, 0.2f);
         for (int i = 0; i < hardPoints.Count; i++)
@@ -117,8 +113,10 @@ public class BezierCurvePoint : MonoBehaviour
         }
         if(pointPositions.Count != 0) pointPositions.Clear();
         allPositions.Clear();
+        finishedCurvePoints.Clear();
         if (generationType == CurveGeneration.Direct)
         {
+            pointPositions.Add(transform.position);
             foreach (var p in hardPoints)
             {
                 pointPositions.Add(p.transform.position);
@@ -135,6 +133,7 @@ public class BezierCurvePoint : MonoBehaviour
     {
         //now hardPoints represents points already on the curve. So we need to generate the controlPoints through them
         //need to generate the curve for all pairs
+        if (hardPoints[0].GetComponent<EditableControlPoint>().GetTangentPoints() == null) return;
         if (curveEnd == CurveEnd.Looping)
         {
             for (int i = 0; i < hardPoints.Count; i++)
@@ -151,9 +150,11 @@ public class BezierCurvePoint : MonoBehaviour
                 }
                 var cp = p.GetComponent<EditableControlPoint>();
                 var thisEditablePoint = GetComponent<EditableControlPoint>();
+
                 if (i == 0)
                 {
                     pointPositions.Add(transform.position);
+                    Debug.Log(i);
                     pointPositions.Add(thisEditablePoint.GetTangentPoints()[0]);
                     pointPositions.Add(cp.GetTangentPoints()[1]);
                     pointPositions.Add(p.transform.position);
@@ -174,21 +175,15 @@ public class BezierCurvePoint : MonoBehaviour
 
     private void GenerateThroughControlPoints(bool draw, List<Vector3> controlPoints)
     {
-        iterations = controlPoints.Count - 1;
+        allPositions.Clear();
+        iterations = controlPoints.Count - 2;
         Gizmos.color = Color.white;
-        for (int i = 0; i < controlPoints.Count; i++)
+        for (int i = 1; i < controlPoints.Count; i++)
         {
-            if (i == 0)
-            {
-                if(draw) Gizmos.DrawLine(transform.position, controlPoints[i]);
-                GetInterpolationPoints(transform.position, controlPoints[i], steps, draw);
-            }
-            else
-            {
-                if(draw)Gizmos.DrawLine(controlPoints[i - 1], controlPoints[i]);
-                GetInterpolationPoints(controlPoints[i - 1]
-                    , controlPoints[i], steps, draw);
-            }
+            //if(draw)Gizmos.DrawLine(controlPoints[i - 1], controlPoints[i]);
+            GetInterpolationPoints(controlPoints[i - 1]
+                , controlPoints[i], steps, draw);
+            
         }
         if(draw)Gizmos.color = Color.red;
         Generate(draw);
@@ -202,7 +197,7 @@ public class BezierCurvePoint : MonoBehaviour
         {
             Vector3 nPos = start + direction * i + direction / 2;
             positions.Add(nPos);
-            if(draw) Gizmos.DrawSphere(nPos, 0.05f);
+            //if(draw) Gizmos.DrawSphere(nPos, 0.05f);
         }
         allPositions.Add(positions);
     }
@@ -228,7 +223,6 @@ public class BezierCurvePoint : MonoBehaviour
         
         if (iterations == 1)
         {
-            finishedCurvePoints.Clear();
             foreach (Vector3 newPoint in nAllPositions[0])
             {
                 if(draw)Gizmos.DrawSphere(newPoint, 0.1f);
@@ -338,7 +332,6 @@ public class CurveEditor : Editor
             var difference = newPosition - p.transform.position;
             p.SetTangentDirection((difference).normalized);
             p.SetLength(difference.magnitude);
-
         }
     }
 }
