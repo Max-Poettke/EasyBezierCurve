@@ -13,6 +13,7 @@ public class EditableControlPoint : MonoBehaviour
     [SerializeField]
     private List<Vector3> tangentPoints;
 
+    [SerializeField] public Color color;
     private void Awake()
     {
         if (tangentPoints == null) tangentPoints = new List<Vector3>(2);
@@ -23,7 +24,7 @@ public class EditableControlPoint : MonoBehaviour
         if(tangentPoints.Count != 0) tangentPoints.Clear();
         tangentPoints.Add(transform.position + tangentDirection * length);
         tangentPoints.Add(transform.position - tangentDirection * length);
-        Gizmos.color = Color.blue;
+        Gizmos.color = color;
         Gizmos.DrawWireSphere(transform.position, 0.2f);
         if (tangentDirection != Vector3.zero && length != 0 && Selection.Contains(gameObject))
         {
@@ -40,5 +41,5 @@ public class EditableControlPoint : MonoBehaviour
     public void SetTangentUp(Vector3 tangentUp){this.tangentUp = tangentUp;}
     public List<Vector3> GetTangentPoints(){return tangentPoints;}
     public void SetTangentPoints(List<Vector3> tangentPoints){this.tangentPoints = tangentPoints;}
-    
+
 }

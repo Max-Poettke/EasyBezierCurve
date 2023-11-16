@@ -13,6 +13,10 @@ using Vector3 = UnityEngine.Vector3;
 
 public class BezierCurvePoint : MonoBehaviour
 {
+    [Header("Customization")] 
+    [SerializeField] public Color uIColor;
+    [SerializeField] public Color curvePointColor;
+    
     [Header("The curve")]
     public List<GameObject> hardPoints;
 
@@ -53,7 +57,10 @@ public class BezierCurvePoint : MonoBehaviour
                 hardPoints[i].AddComponent<EditableControlPoint>();
                 ResetTangents();
             }
+
+            hardPoints[i].GetComponent<EditableControlPoint>().color = uIColor;
         }
+        GetComponent<EditableControlPoint>().color = uIColor;
 
         if (curveEnd == CurveEnd.Looping)
         {
@@ -105,7 +112,7 @@ public class BezierCurvePoint : MonoBehaviour
             frameBuffer = true;
             return;
         }
-        Gizmos.color = Color.blue;
+        Gizmos.color = uIColor;
         Gizmos.DrawWireSphere(transform.position, 0.2f);
         for (int i = 0; i < hardPoints.Count; i++)
         {
@@ -173,15 +180,11 @@ public class BezierCurvePoint : MonoBehaviour
     {
         allPositions.Clear();
         iterations = controlPoints.Count - 2;
-        Gizmos.color = Color.white;
         for (int i = 1; i < controlPoints.Count; i++)
-        {
-            //if(draw)Gizmos.DrawLine(controlPoints[i - 1], controlPoints[i]);
+        { 
             GetInterpolationPoints(controlPoints[i - 1]
                 , controlPoints[i], steps, draw);
-            
         }
-        if(draw)Gizmos.color = Color.red;
         Generate(draw);
     }
     
@@ -193,7 +196,6 @@ public class BezierCurvePoint : MonoBehaviour
         {
             Vector3 nPos = start + direction * i + direction / 2;
             positions.Add(nPos);
-            //if(draw) Gizmos.DrawSphere(nPos, 0.05f);
         }
         allPositions.Add(positions);
     }
@@ -202,12 +204,11 @@ public class BezierCurvePoint : MonoBehaviour
     {
         List<Vector3> positions = new List<Vector3>();
         List<List<Vector3>> nAllPositions = new List<List<Vector3>>();
-        if(iterations == 1 && draw) Gizmos.color = Color.green;
+        if(iterations == 1 && draw) Gizmos.color = curvePointColor;
         for (int i = 1; i < allPositions.Count; i++)
         {
             for (int j = 0; j < allPositions[i].Count; j++)
             {
-                //Gizmos.DrawLine(allPositions[i - 1][j], allPositions[i][j]);
                 Vector3 newDirection = (allPositions[i][j] - allPositions[i - 1][j]).normalized;
                 float stepDistance = Vector3.Distance(allPositions[i - 1][j], allPositions[i][j]) / steps;
                 Vector3 newPoint = allPositions[i - 1][j] + newDirection * stepDistance * j;
