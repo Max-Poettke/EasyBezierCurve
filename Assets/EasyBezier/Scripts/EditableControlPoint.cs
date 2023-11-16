@@ -5,6 +5,8 @@ using UnityEngine;
 public class EditableControlPoint : MonoBehaviour
 {
     [SerializeField]
+    public bool confinedTo2D = true;
+    [SerializeField]
     private float length;
     [SerializeField]
     private Vector3 tangentDirection;
@@ -24,6 +26,12 @@ public class EditableControlPoint : MonoBehaviour
         if(tangentPoints.Count != 0) tangentPoints.Clear();
         tangentPoints.Add(transform.position + tangentDirection * length);
         tangentPoints.Add(transform.position - tangentDirection * length);
+        if (confinedTo2D)
+        {
+            tangentPoints[0] = new Vector3(tangentPoints[0].x, tangentPoints[0].y, 0f);
+            tangentPoints[1] = new Vector3(tangentPoints[1].x, tangentPoints[1].y, 0f);
+        }   
+        
         Gizmos.color = color;
         Gizmos.DrawWireSphere(transform.position, 0.2f);
         if (tangentDirection != Vector3.zero && length != 0 && Selection.Contains(gameObject))

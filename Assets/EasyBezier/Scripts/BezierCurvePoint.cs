@@ -16,8 +16,9 @@ public class BezierCurvePoint : MonoBehaviour
     [Header("Customization")] 
     [SerializeField] public Color uIColor;
     [SerializeField] public Color curvePointColor;
-    
+
     [Header("The curve")]
+    [SerializeField]public bool confinedTo2D = true;
     public List<GameObject> hardPoints;
 
     private List<Vector3> pointPositions = new List<Vector3>();
@@ -54,11 +55,14 @@ public class BezierCurvePoint : MonoBehaviour
         {   
             if (hardPoints[i].GetComponent<EditableControlPoint>() == null)
             {
-                hardPoints[i].AddComponent<EditableControlPoint>();
+                var p = hardPoints[i].AddComponent<EditableControlPoint>();
+                p.confinedTo2D = confinedTo2D;
                 ResetTangents();
             }
 
-            hardPoints[i].GetComponent<EditableControlPoint>().color = uIColor;
+            var p1 = hardPoints[i].GetComponent<EditableControlPoint>();
+            p1.color = uIColor;
+            p1.confinedTo2D = confinedTo2D;
         }
         GetComponent<EditableControlPoint>().color = uIColor;
 
